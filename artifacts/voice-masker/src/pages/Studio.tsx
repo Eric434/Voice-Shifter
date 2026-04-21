@@ -588,6 +588,46 @@ export default function Studio() {
               testId="slider-distortion-amount"
             />
           </EffectCard>
+
+          {/* Love */}
+          <EffectCard
+            title="LOVE VOICE"
+            enabled={effects.love.enabled}
+            onToggle={() => updateEffect('love', { enabled: !effects.love.enabled })}
+          >
+            <p className="text-xs text-muted-foreground mb-1">
+              Warm tremolo with soft shimmer — a gentle, dreamy pulsing glow on the voice.
+            </p>
+            <SliderRow
+              label="Tremolo Rate"
+              value={effects.love.rate}
+              min={1}
+              max={12}
+              step={0.5}
+              unit="Hz"
+              onChange={v => updateEffect('love', { rate: v })}
+              testId="slider-love-rate"
+            />
+            <SliderRow
+              label="Depth"
+              value={effects.love.depth}
+              min={0.05}
+              max={0.9}
+              step={0.05}
+              onChange={v => updateEffect('love', { depth: v })}
+              testId="slider-love-depth"
+            />
+            <SliderRow
+              label="Warmth (cutoff)"
+              value={effects.love.warmth}
+              min={1000}
+              max={8000}
+              step={100}
+              unit="Hz"
+              onChange={v => updateEffect('love', { warmth: v })}
+              testId="slider-love-warmth"
+            />
+          </EffectCard>
         </div>
 
         <p className="text-xs font-mono text-muted-foreground/50 mt-6 text-center">

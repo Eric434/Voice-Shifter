@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { encodeWAV } from '@/lib/audioUtils';
 
-export type EffectName = 'pitchShift' | 'robot' | 'echo' | 'reverb' | 'lowpass' | 'highpass' | 'distortion';
+export type EffectName = 'pitchShift' | 'robot' | 'echo' | 'reverb' | 'lowpass' | 'highpass' | 'distortion' | 'love';
 
 export interface EffectSettings {
   pitchShift: { enabled: boolean; semitones: number };
@@ -11,6 +11,7 @@ export interface EffectSettings {
   lowpass: { enabled: boolean; frequency: number };
   highpass: { enabled: boolean; frequency: number };
   distortion: { enabled: boolean; amount: number };
+  love: { enabled: boolean; rate: number; depth: number; warmth: number };
 }
 
 export const defaultEffects: EffectSettings = {
@@ -21,6 +22,7 @@ export const defaultEffects: EffectSettings = {
   lowpass: { enabled: false, frequency: 2000 },
   highpass: { enabled: false, frequency: 500 },
   distortion: { enabled: false, amount: 200 },
+  love: { enabled: false, rate: 5, depth: 0.4, warmth: 3500 },
 };
 
 function makeDistortionCurve(amount: number): Float32Array {
@@ -187,6 +189,50 @@ export function useAudioProcessor() {
         waveShaper.oversample = '4x';
         currentNode.connect(waveShaper);
         currentNode = waveShaper;
+      }
+
+      if (effects.love.enabled) {
+        // Warmth: low-pass filter to soften harsh highs
+        const warmthFilter = offlineCtx.createBiquadFilter();
+        warmthFilter.type = 'lowpass';
+        warmthFilter.frequency.value = effects.love.warmth;
+        warmthFilter.Q.value = 0.5;
+        currentNode.connect(warmthFilter);
+        currentNode = warmthFilter;
+
+        // Tremolo: slow amplitude modulation via oscillator → gain AudioParam
+        const tremoloGain = offlineCtx.createGain();
+        tremoloGain.gain.value = 1 - effects.love.depth * 0.5;
+
+        const tremoloOsc = offlineCtx.createOscillator();
+        tremoloOsc.type = 'sine';
+        tremoloOsc.frequency.value = effects.love.rate;
+
+        const tremoloDepth = offlineCtx.createGain();
+        tremoloDepth.gain.value = effects.love.depth * 0.5;
+
+        tremoloOsc.connect(tremoloDepth);
+        tremoloDepth.connect(tremoloGain.gain);
+        tremoloOsc.start(0);
+
+        currentNode.connect(tremoloGain);
+        currentNode = tremoloGain;
+
+        // Soft shimmer: short warm reverb tail
+        const shimmerImpulse = createImpulseResponse(offlineCtx, 1.2);
+        const shimmerConvolver = offlineCtx.createConvolver();
+        shimmerConvolver.buffer = shimmerImpulse;
+        const dryGain = offlineCtx.createGain();
+        dryGain.gain.value = 0.8;
+        const wetGain = offlineCtx.createGain();
+        wetGain.gain.value = 0.35;
+        const loveMix = offlineCtx.createGain();
+        currentNode.connect(dryGain);
+        currentNode.connect(shimmerConvolver);
+        dryGain.connect(loveMix);
+        shimmerConvolver.connect(wetGain);
+        wetGain.connect(loveMix);
+        currentNode = loveMix;
       }
 
       currentNode.connect(offlineCtx.destination);
