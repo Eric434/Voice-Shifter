@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "VoiceMask Live",
+  "version": "1.0.0",
+  "description": "Real-time voice masking for WhatsApp Web, Google Meet, Discord and Zoom.",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "https://meet.google.com/*",
+    "https://discord.com/*",
+    "https://zoom.us/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "VoiceMask Live"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*",
+        "https://meet.google.com/*",
+        "https://discord.com/*",
+        "https://zoom.us/*"
+      ],
+      "js": ["content-script.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
