@@ -9,6 +9,9 @@ const DEFAULTS = {
   love:       { enabled: false, rate: 5, depth: 0.5, warmth: 3000 },
 };
 
+// Custom presets embedded by VoiceMask Studio on export
+const CUSTOM_PRESETS = /* CUSTOM_PRESETS_DATA */[];
+
 const $ = id => document.getElementById(id);
 let current = { ...DEFAULTS };
 let customHosts = [];
@@ -37,11 +40,18 @@ function saveSettings() {
   chrome.storage.local.set({ voicemask_settings: current });
 }
 
-chrome.storage.local.get(['voicemask_settings', 'voicemask_custom_hosts'], result => {
+chrome.storage.local.get(['voicemask_settings', 'voicemask_custom_hosts', 'voicemask_active_preset'], result => {
   current = result.voicemask_settings || { ...DEFAULTS };
   customHosts = result.voicemask_custom_hosts || [];
   applyToUI(current);
   renderSites();
+
+  // Restore active preset checkbox if any
+  const activeIdx = result.voicemask_active_preset;
+  if (typeof activeIdx === 'number') {
+    const cb = $('custom-preset-' + activeIdx);
+    if (cb) cb.checked = true;
+  }
 });
 
 $('active-toggle').addEventListener('change', e => {
@@ -63,7 +73,54 @@ const effectMap = {
 Object.entries(effectMap).forEach(([id, key]) => {
   $(id).addEventListener('change', e => {
     current[key] = { ...current[key], enabled: e.target.checked };
+    // Uncheck any active preset since individual effects changed
+    document.querySelectorAll('.custom-preset-cb').forEach(cb => { cb.checked = false; });
+    chrome.storage.local.remove('voicemask_active_preset');
     saveSettings();
+  });
+});
+
+// ── Custom Presets ────────────────────────────────────────────────────────────
+
+function applyPreset(preset, idx) {
+  const fx = preset.effects;
+  if (fx.robot)      { current.robot      = { ...fx.robot };      $('fx-robot').checked      = !!fx.robot.enabled; }
+  if (fx.echo)       { current.echo       = { ...fx.echo };       $('fx-echo').checked       = !!fx.echo.enabled; }
+  if (fx.reverb)     { current.reverb     = { ...fx.reverb };     $('fx-reverb').checked     = !!fx.reverb.enabled; }
+  if (fx.lowpass)    { current.lowpass    = { ...fx.lowpass };    $('fx-lowpass').checked    = !!fx.lowpass.enabled; }
+  if (fx.highpass)   { current.highpass   = { ...fx.highpass };   $('fx-highpass').checked   = !!fx.highpass.enabled; }
+  if (fx.distortion) { current.distortion = { ...fx.distortion }; $('fx-distortion').checked = !!fx.distortion.enabled; }
+  if (fx.love)       { current.love       = { ...fx.love };       $('fx-love').checked       = !!fx.love.enabled; }
+  chrome.storage.local.set({ voicemask_active_preset: idx });
+  saveSettings();
+}
+
+function clearPreset() {
+  // Deactivate all effects
+  ['robot','echo','reverb','lowpass','highpass','distortion','love'].forEach(key => {
+    current[key] = { ...current[key], enabled: false };
+  });
+  applyToUI(current);
+  chrome.storage.local.remove('voicemask_active_preset');
+  saveSettings();
+}
+
+CUSTOM_PRESETS.forEach((preset, i) => {
+  const cb = $('custom-preset-' + i);
+  if (!cb) return;
+  cb.addEventListener('change', e => {
+    // Radio-style: uncheck all others
+    CUSTOM_PRESETS.forEach((_, j) => {
+      if (j !== i) {
+        const other = $('custom-preset-' + j);
+        if (other) other.checked = false;
+      }
+    });
+    if (e.target.checked) {
+      applyPreset(preset, i);
+    } else {
+      clearPreset();
+    }
   });
 });
 

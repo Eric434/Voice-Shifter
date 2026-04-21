@@ -6,6 +6,7 @@ export interface Preset {
   name: string;
   effects: EffectSettings;
   createdAt: number;
+  exportToExtension: boolean;
 }
 
 const STORAGE_KEY = 'voicemask-presets';
@@ -13,7 +14,8 @@ const STORAGE_KEY = 'voicemask-presets';
 function loadFromStorage(): Preset[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const presets: Preset[] = raw ? JSON.parse(raw) : [];
+    return presets.map(p => ({ exportToExtension: false, ...p }));
   } catch {
     return [];
   }
@@ -32,6 +34,7 @@ export function usePresets() {
       name: name.trim(),
       effects,
       createdAt: Date.now(),
+      exportToExtension: false,
     };
     setPresets(prev => {
       const updated = [preset, ...prev];
@@ -57,5 +60,13 @@ export function usePresets() {
     });
   }, []);
 
-  return { presets, savePreset, deletePreset, renamePreset };
+  const toggleExportToExtension = useCallback((id: string) => {
+    setPresets(prev => {
+      const updated = prev.map(p => p.id === id ? { ...p, exportToExtension: !p.exportToExtension } : p);
+      saveToStorage(updated);
+      return updated;
+    });
+  }, []);
+
+  return { presets, savePreset, deletePreset, renamePreset, toggleExportToExtension };
 }

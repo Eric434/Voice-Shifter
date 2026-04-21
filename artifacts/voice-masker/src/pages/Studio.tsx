@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Trash2, Check, Radio, Volume2, VolumeX, AlertTriangle, Puzzle } from 'lucide-react';
+import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Trash2, Check, Radio, Volume2, VolumeX, AlertTriangle, Puzzle, PlugZap } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { usePresets } from '@/hooks/usePresets';
@@ -140,7 +140,7 @@ function WaveformCanvas({ buffer, label, color = '#00e5ff' }: WaveformCanvasProp
 export default function Studio() {
   const recorder = useAudioRecorder();
   const processor = useAudioProcessor();
-  const { presets, savePreset, deletePreset } = usePresets();
+  const { presets, savePreset, deletePreset, toggleExportToExtension } = usePresets();
   const live = useLiveProcessor();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -482,6 +482,11 @@ export default function Studio() {
               No presets yet — configure effects and save
             </p>
           ) : (
+            <p className="text-xs font-mono text-muted-foreground/40 mb-2 flex items-center gap-1">
+              <PlugZap className="w-3 h-3" /> Hover a preset and click the lightning icon to add it to your extension
+            </p>
+          )}
+          {presets.length > 0 && (
             <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
               {presets.map(preset => (
                 <div
@@ -513,6 +518,20 @@ export default function Studio() {
                     )}
                   >
                     {loadedPresetId === preset.id ? 'LOADED' : 'LOAD'}
+                  </button>
+                  <button
+                    data-testid={`button-export-preset-${preset.id}`}
+                    onClick={() => toggleExportToExtension(preset.id)}
+                    title={preset.exportToExtension ? 'Remove from extension' : 'Add to extension popup'}
+                    className={cn(
+                      'transition-colors shrink-0',
+                      preset.exportToExtension
+                        ? 'text-primary'
+                        : 'text-muted-foreground/30 hover:text-primary opacity-0 group-hover:opacity-100'
+                    )}
+                    aria-label={preset.exportToExtension ? 'Remove from extension' : 'Add to extension popup'}
+                  >
+                    <PlugZap className="w-3.5 h-3.5" />
                   </button>
                   <button
                     data-testid={`button-delete-preset-${preset.id}`}
@@ -738,10 +757,21 @@ export default function Studio() {
             <p className="text-muted-foreground/50">Custom: add any site (Teams, Skype, Jitsi, etc.) directly in the extension popup.</p>
           </div>
 
+          {presets.some(p => p.exportToExtension) && (
+            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-primary/30 bg-primary/5 text-xs font-mono text-primary">
+              <PlugZap className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                {presets.filter(p => p.exportToExtension).length} custom preset{presets.filter(p => p.exportToExtension).length !== 1 ? 's' : ''} will be included in the extension
+              </span>
+            </div>
+          )}
           <button
             onClick={async () => {
               setExtDownloading(true);
-              try { await downloadExtension(); } finally { setExtDownloading(false); }
+              try {
+                const exported = presets.filter(p => p.exportToExtension);
+                await downloadExtension(exported);
+              } finally { setExtDownloading(false); }
             }}
             disabled={extDownloading}
             className={cn(
