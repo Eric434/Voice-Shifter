@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Trash2, Check } from 'lucide-react';
+import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Trash2, Check, Radio, Volume2, VolumeX, AlertTriangle } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { usePresets } from '@/hooks/usePresets';
+import { useLiveProcessor } from '@/hooks/useLiveProcessor';
 import { drawWaveform } from '@/lib/audioUtils';
 import { cn } from '@/lib/utils';
 
@@ -139,6 +140,7 @@ export default function Studio() {
   const recorder = useAudioRecorder();
   const processor = useAudioProcessor();
   const { presets, savePreset, deletePreset } = usePresets();
+  const live = useLiveProcessor();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [hasAudio, setHasAudio] = useState(false);
@@ -354,6 +356,86 @@ export default function Studio() {
             <Download className="w-4 h-4" />
             DOWNLOAD WAV
           </button>
+        </div>
+
+        {/* ── Live Mode ── */}
+        <div className="border-t border-border pt-4 mt-2">
+          <div className="flex items-center gap-2 mb-3">
+            <Radio className={cn('w-4 h-4', live.status === 'live' ? 'text-red-400 animate-pulse' : 'text-muted-foreground')} />
+            <h2 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">Live Mode</h2>
+            {live.status === 'live' && (
+              <span className="ml-auto text-xs font-mono text-red-400 font-semibold">● LIVE</span>
+            )}
+          </div>
+
+          {live.status === 'error' && live.error && (
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/30 mb-3">
+              <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+              <p className="text-xs font-mono text-destructive">{live.error}</p>
+            </div>
+          )}
+
+          {/* Headphone warning */}
+          {live.status !== 'live' && (
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 border border-border/50 mb-3">
+              <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 shrink-0 mt-0.5" />
+              <p className="text-xs font-mono text-muted-foreground leading-relaxed">
+                <span className="text-yellow-400 font-semibold">Use headphones.</span> Speakers will cause feedback echo when monitoring is on.
+              </p>
+            </div>
+          )}
+
+          {/* Start / Stop */}
+          <button
+            data-testid="button-toggle-live"
+            onClick={() => live.status === 'live' ? live.stopLive() : live.startLive(processor.effects)}
+            disabled={live.status === 'starting'}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 py-3 rounded-lg font-mono text-sm font-bold transition-all mb-2',
+              live.status === 'live'
+                ? 'bg-red-500/20 border border-red-500/60 text-red-400 hover:bg-red-500/30'
+                : live.status === 'starting'
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                : 'bg-primary/10 border border-primary/50 text-primary hover:bg-primary/20'
+            )}
+          >
+            <Radio className="w-4 h-4" />
+            {live.status === 'live' ? 'STOP LIVE' : live.status === 'starting' ? 'STARTING...' : 'START LIVE'}
+          </button>
+
+          {/* Monitor toggle */}
+          {live.status === 'live' && (
+            <div className="flex flex-col gap-2">
+              <button
+                data-testid="button-toggle-monitor"
+                onClick={live.toggleMonitor}
+                className={cn(
+                  'flex items-center justify-center gap-2 py-2 rounded-lg font-mono text-xs font-semibold transition-all border',
+                  live.monitorEnabled
+                    ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
+                    : 'border-border text-muted-foreground hover:border-border/80'
+                )}
+              >
+                {live.monitorEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                {live.monitorEnabled ? 'MONITORING ON' : 'MONITORING OFF'}
+              </button>
+
+              {/* How to use in calls */}
+              <div className="p-3 rounded-lg bg-muted/40 border border-border/50 text-xs font-mono text-muted-foreground space-y-1.5">
+                <p className="text-foreground font-semibold text-xs">Use masked voice in calls:</p>
+                <p>1. Install <span className="text-primary">BlackHole</span> (Mac) or <span className="text-primary">VB-Cable</span> (Windows) virtual audio cable.</p>
+                <p>2. In your call app, set microphone to the virtual cable output.</p>
+                <p>3. Route this browser tab's audio to that virtual cable.</p>
+                <p className="text-muted-foreground/60 pt-1">Or: use browser screen share with audio and share the tab.</p>
+              </div>
+            </div>
+          )}
+
+          {live.status !== 'live' && (
+            <p className="text-xs font-mono text-muted-foreground/40 text-center mt-1">
+              Applies active effects to your mic in real-time
+            </p>
+          )}
         </div>
       </div>
 
