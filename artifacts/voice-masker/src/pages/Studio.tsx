@@ -726,15 +726,16 @@ export default function Studio() {
           </div>
 
           <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3 text-xs font-mono text-muted-foreground leading-relaxed">
-            <p className="text-foreground font-semibold text-xs">Chrome Extension — injects your masked voice directly into any web call.</p>
+            <p className="text-foreground font-semibold text-xs">Chrome Extension — injects your masked voice into any web call, including custom sites.</p>
             <ol className="space-y-1.5 list-none">
               <li><span className="text-primary font-bold">1.</span> Download and unzip the extension below.</li>
               <li><span className="text-primary font-bold">2.</span> In Chrome, go to <span className="text-foreground">chrome://extensions</span></li>
               <li><span className="text-primary font-bold">3.</span> Enable <span className="text-foreground">Developer mode</span> (top-right toggle).</li>
               <li><span className="text-primary font-bold">4.</span> Click <span className="text-foreground">Load unpacked</span> → select the unzipped folder.</li>
-              <li><span className="text-primary font-bold">5.</span> Open WhatsApp Web, click the <span className="text-foreground">VoiceMask</span> extension icon, enable effects, then <span className="text-yellow-400">start a new call</span>.</li>
+              <li><span className="text-primary font-bold">5.</span> Click the VoiceMask icon → enable effects → open your call app → <span className="text-yellow-400">start a new call</span>.</li>
             </ol>
-            <p className="text-muted-foreground/50">Works on: WhatsApp Web · Google Meet · Discord · Zoom</p>
+            <p className="text-muted-foreground/60 pt-1">Built-in: WhatsApp Web · Google Meet · Discord · Zoom</p>
+            <p className="text-muted-foreground/50">Custom: add any site (Teams, Skype, Jitsi, etc.) directly in the extension popup.</p>
           </div>
 
           <button

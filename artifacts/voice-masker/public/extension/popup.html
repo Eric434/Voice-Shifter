@@ -6,7 +6,7 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    width: 300px;
+    width: 310px;
     background: #0a0e14;
     color: #e2e8f0;
     font-family: 'JetBrains Mono', 'Courier New', monospace;
@@ -35,18 +35,14 @@
 
   .master {
     margin: 12px 14px 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     background: #0d1117;
     border: 1px solid #1e2a38;
     border-radius: 8px;
     padding: 10px 12px;
   }
   .master-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #94a3b8; }
-  .toggle {
-    position: relative; width: 40px; height: 22px; cursor: pointer;
-  }
+  .toggle { position: relative; width: 40px; height: 22px; cursor: pointer; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .slider {
     position: absolute; inset: 0;
@@ -85,8 +81,62 @@
   .effect-name { flex: 1; color: #cbd5e1; font-size: 11px; letter-spacing: 0.5px; }
   .effect-note { font-size: 10px; color: #475569; }
 
+  .divider { height: 1px; background: #1e2a38; margin: 8px 14px; }
+
+  /* Custom sites */
+  .sites-section { margin: 0 14px; }
+  .sites-row {
+    display: flex; gap: 6px; margin-bottom: 8px;
+  }
+  .sites-row input[type=text] {
+    flex: 1; background: #0d1117; border: 1px solid #1e2a38;
+    border-radius: 6px; padding: 7px 9px; color: #e2e8f0;
+    font-family: inherit; font-size: 11px; outline: none;
+    transition: border 0.15s;
+  }
+  .sites-row input[type=text]:focus { border-color: #00e5ff55; }
+  .sites-row input[type=text]::placeholder { color: #334155; }
+  .btn-add {
+    background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3);
+    color: #00e5ff; border-radius: 6px; padding: 0 12px;
+    font-family: inherit; font-size: 11px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { background: rgba(0,229,255,0.2); }
+  .site-tag {
+    display: flex; align-items: center; gap: 6px;
+    background: #0d1117; border: 1px solid #1e2a38;
+    border-radius: 6px; padding: 5px 9px; margin-bottom: 4px;
+    font-size: 11px; color: #94a3b8;
+  }
+  .site-tag .host { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .site-tag .remove {
+    cursor: pointer; color: #475569; font-size: 14px; line-height: 1;
+    padding: 0 2px; transition: color 0.1s;
+  }
+  .site-tag .remove:hover { color: #ef4444; }
+  .sites-empty { color: #334155; font-size: 10px; margin-bottom: 6px; }
+
+  .perm-note {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 6px; padding: 8px 10px;
+    font-size: 10px; color: #f59e0b; line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .btn-inject {
+    width: 100%; background: rgba(0,229,255,0.07); border: 1px solid rgba(0,229,255,0.2);
+    color: #64748b; border-radius: 6px; padding: 8px;
+    font-family: inherit; font-size: 10px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: all 0.15s;
+  }
+  .btn-inject:hover { background: rgba(0,229,255,0.12); color: #94a3b8; }
+  .btn-inject.success { color: #00e5ff; border-color: rgba(0,229,255,0.4); }
+
   .footer {
-    margin: 12px 14px 0;
+    margin: 10px 14px 0;
     padding: 8px 10px;
     background: #0d1117;
     border: 1px solid #1e2a38;
@@ -96,7 +146,6 @@
     line-height: 1.5;
   }
   .footer span { color: #f59e0b; }
-  .divider { height: 1px; background: #1e2a38; margin: 8px 14px; }
 </style>
 </head>
 <body>
@@ -123,42 +172,36 @@
   <span class="effect-name">ROBOT VOICE</span>
   <span class="effect-note">50 Hz AM</span>
 </label>
-
 <label class="effect-row">
   <input type="checkbox" id="fx-echo">
   <span class="cb"></span>
   <span class="effect-name">ECHO</span>
-  <span class="effect-note">300ms</span>
+  <span class="effect-note">300 ms</span>
 </label>
-
 <label class="effect-row">
   <input type="checkbox" id="fx-reverb">
   <span class="cb"></span>
   <span class="effect-name">REVERB</span>
   <span class="effect-note">2 s decay</span>
 </label>
-
 <label class="effect-row">
   <input type="checkbox" id="fx-lowpass">
   <span class="cb"></span>
   <span class="effect-name">LOW PASS</span>
   <span class="effect-note">2 kHz</span>
 </label>
-
 <label class="effect-row">
   <input type="checkbox" id="fx-highpass">
   <span class="cb"></span>
   <span class="effect-name">HIGH PASS</span>
   <span class="effect-note">200 Hz</span>
 </label>
-
 <label class="effect-row">
   <input type="checkbox" id="fx-distortion">
   <span class="cb"></span>
   <span class="effect-name">DISTORTION</span>
   <span class="effect-note">wave shaper</span>
 </label>
-
 <label class="effect-row">
   <input type="checkbox" id="fx-love">
   <span class="cb"></span>
@@ -166,8 +209,24 @@
   <span class="effect-note">tremolo + shimmer</span>
 </label>
 
+<div class="divider"></div>
+<div class="section-label">Custom Sites</div>
+<div class="sites-section">
+  <div class="sites-row">
+    <input type="text" id="site-input" placeholder="e.g. teams.microsoft.com">
+    <button class="btn-add" id="btn-add-site">+ ADD</button>
+  </div>
+  <div id="sites-list"></div>
+
+  <div id="perm-warning" class="perm-note" style="display:none">
+    Chrome will ask you to allow access to this site. Click&nbsp;<strong>Allow</strong> in the prompt.
+  </div>
+
+  <button class="btn-inject" id="btn-inject">⟳ INJECT INTO CURRENT TAB</button>
+</div>
+
 <div class="footer">
-  <span>⚠</span> Start or restart your call <em>after</em> enabling masking — WhatsApp / Meet open the mic when a call begins.
+  <span>⚠</span> Start or restart your call <em>after</em> enabling — mic is opened when a call begins.
 </div>
 
 <script src="popup.js"></script>
