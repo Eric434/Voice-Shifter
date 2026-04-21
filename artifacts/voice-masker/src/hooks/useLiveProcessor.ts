@@ -8,14 +8,14 @@ function makeDistortionCurve(amount: number): Float32Array {
     const x = (i * 2) / n - 1;
     curve[i] = ((Math.PI + amount) * x) / (Math.PI + amount * Math.abs(x));
   }
-  return curve;
+  return curve as any;
 }
 
 function createImpulseResponse(ctx: AudioContext, decay: number): AudioBuffer {
   const length = ctx.sampleRate * decay;
   const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
-    const d = impulse.getChannelData(ch);
+    const d = impulse.getChannelData(ch) as any;
     for (let i = 0; i < length; i++) {
       d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
     }
@@ -147,7 +147,7 @@ export function useLiveProcessor() {
       // Distortion
       if (effects.distortion.enabled) {
         const ws = ctx.createWaveShaper();
-        ws.curve = makeDistortionCurve(effects.distortion.amount);
+        ws.curve = makeDistortionCurve(effects.distortion.amount) as any;
         ws.oversample = '4x';
         currentNode.connect(ws);
         currentNode = ws;
@@ -170,7 +170,7 @@ export function useLiveProcessor() {
         const tremoloDepth = ctx.createGain();
         tremoloDepth.gain.value = effects.love.depth * 0.5;
         tremoloOsc.connect(tremoloDepth);
-        tremoloDepth.connect(tremoloGain.gain);
+        tremoloDepth.connect(tremoloGain.gain as any);
         tremoloOsc.start();
         oscillatorsRef.current.push(tremoloOsc);
         currentNode.connect(tremoloGain);

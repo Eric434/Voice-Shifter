@@ -15,7 +15,7 @@ function loadFromStorage(): Preset[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const presets: Preset[] = raw ? JSON.parse(raw) : [];
-    return presets.map(p => ({ exportToExtension: false, ...p }));
+    return presets.map(p => ({ ...p, exportToExtension: p.exportToExtension ?? false }));
   } catch {
     return [];
   }

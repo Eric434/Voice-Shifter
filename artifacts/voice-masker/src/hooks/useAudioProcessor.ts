@@ -32,7 +32,7 @@ function makeDistortionCurve(amount: number): Float32Array {
     const x = (i * 2) / n - 1;
     curve[i] = ((Math.PI + amount) * x) / (Math.PI + amount * Math.abs(x));
   }
-  return curve;
+  return curve as any;
 }
 
 function createImpulseResponse(audioCtx: AudioContext | OfflineAudioContext, decay: number): AudioBuffer {
@@ -40,7 +40,7 @@ function createImpulseResponse(audioCtx: AudioContext | OfflineAudioContext, dec
   const length = sampleRate * decay;
   const impulse = audioCtx.createBuffer(2, length, sampleRate);
   for (let channel = 0; channel < 2; channel++) {
-    const channelData = impulse.getChannelData(channel);
+    const channelData = impulse.getChannelData(channel) as any;
     for (let i = 0; i < length; i++) {
       channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
     }
@@ -185,7 +185,7 @@ export function useAudioProcessor() {
 
       if (effects.distortion.enabled) {
         const waveShaper = offlineCtx.createWaveShaper();
-        waveShaper.curve = makeDistortionCurve(effects.distortion.amount);
+        waveShaper.curve = makeDistortionCurve(effects.distortion.amount) as any;
         waveShaper.oversample = '4x';
         currentNode.connect(waveShaper);
         currentNode = waveShaper;
@@ -212,7 +212,7 @@ export function useAudioProcessor() {
         tremoloDepth.gain.value = effects.love.depth * 0.5;
 
         tremoloOsc.connect(tremoloDepth);
-        tremoloDepth.connect(tremoloGain.gain);
+        tremoloDepth.connect(tremoloGain.gain as any);
         tremoloOsc.start(0);
 
         currentNode.connect(tremoloGain);
