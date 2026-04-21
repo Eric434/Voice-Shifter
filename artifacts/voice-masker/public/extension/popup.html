@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VoiceMask Live</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 300px;
+    background: #0a0e14;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 12px;
+    padding: 0 0 12px 0;
+  }
+  .header {
+    background: #0d1117;
+    border-bottom: 1px solid #1e2a38;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo { color: #00e5ff; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+  .badge {
+    margin-left: auto;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .badge.on  { background: rgba(0,229,255,0.15); color: #00e5ff; border: 1px solid rgba(0,229,255,0.4); }
+  .badge.off { background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid #1e2a38; }
+
+  .master {
+    margin: 12px 14px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0d1117;
+    border: 1px solid #1e2a38;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .master-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #94a3b8; }
+  .toggle {
+    position: relative; width: 40px; height: 22px; cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0;
+    background: #1e2a38; border-radius: 11px; transition: 0.2s;
+  }
+  .slider:before {
+    content: '';
+    position: absolute; width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: #64748b; border-radius: 50%; transition: 0.2s;
+  }
+  input:checked + .slider { background: rgba(0,229,255,0.25); }
+  input:checked + .slider:before { transform: translateX(18px); background: #00e5ff; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    color: #475569; padding: 0 14px; margin: 10px 0 4px;
+    text-transform: uppercase;
+  }
+  .effect-row {
+    display: flex; align-items: center; padding: 7px 14px;
+    gap: 10px; cursor: pointer; border-radius: 4px; margin: 0 4px;
+    transition: background 0.1s;
+  }
+  .effect-row:hover { background: rgba(255,255,255,0.04); }
+  .effect-row input[type=checkbox] { display: none; }
+  .cb {
+    width: 16px; height: 16px; border: 1px solid #334155;
+    border-radius: 4px; background: #0d1117; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; transition: 0.15s;
+  }
+  .effect-row input:checked ~ .cb { background: #00e5ff; border-color: #00e5ff; }
+  .effect-row input:checked ~ .cb::after {
+    content: '✓'; font-size: 10px; color: #0a0e14; font-weight: 900;
+  }
+  .effect-name { flex: 1; color: #cbd5e1; font-size: 11px; letter-spacing: 0.5px; }
+  .effect-note { font-size: 10px; color: #475569; }
+
+  .footer {
+    margin: 12px 14px 0;
+    padding: 8px 10px;
+    background: #0d1117;
+    border: 1px solid #1e2a38;
+    border-radius: 6px;
+    color: #475569;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  .footer span { color: #f59e0b; }
+  .divider { height: 1px; background: #1e2a38; margin: 8px 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">⬡ VOICEMASK</span>
+  <span id="status-badge" class="badge off">OFF</span>
+</div>
+
+<div class="master">
+  <span class="master-label">MASKING ACTIVE</span>
+  <label class="toggle">
+    <input type="checkbox" id="active-toggle">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="divider"></div>
+<div class="section-label">Effects</div>
+
+<label class="effect-row">
+  <input type="checkbox" id="fx-robot">
+  <span class="cb"></span>
+  <span class="effect-name">ROBOT VOICE</span>
+  <span class="effect-note">50 Hz AM</span>
+</label>
+
+<label class="effect-row">
+  <input type="checkbox" id="fx-echo">
+  <span class="cb"></span>
+  <span class="effect-name">ECHO</span>
+  <span class="effect-note">300ms</span>
+</label>
+
+<label class="effect-row">
+  <input type="checkbox" id="fx-reverb">
+  <span class="cb"></span>
+  <span class="effect-name">REVERB</span>
+  <span class="effect-note">2 s decay</span>
+</label>
+
+<label class="effect-row">
+  <input type="checkbox" id="fx-lowpass">
+  <span class="cb"></span>
+  <span class="effect-name">LOW PASS</span>
+  <span class="effect-note">2 kHz</span>
+</label>
+
+<label class="effect-row">
+  <input type="checkbox" id="fx-highpass">
+  <span class="cb"></span>
+  <span class="effect-name">HIGH PASS</span>
+  <span class="effect-note">200 Hz</span>
+</label>
+
+<label class="effect-row">
+  <input type="checkbox" id="fx-distortion">
+  <span class="cb"></span>
+  <span class="effect-name">DISTORTION</span>
+  <span class="effect-note">wave shaper</span>
+</label>
+
+<label class="effect-row">
+  <input type="checkbox" id="fx-love">
+  <span class="cb"></span>
+  <span class="effect-name">LOVE VOICE</span>
+  <span class="effect-note">tremolo + shimmer</span>
+</label>
+
+<div class="footer">
+  <span>⚠</span> Start or restart your call <em>after</em> enabling masking — WhatsApp / Meet open the mic when a call begins.
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

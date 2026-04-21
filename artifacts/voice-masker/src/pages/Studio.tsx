@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Trash2, Check, Radio, Volume2, VolumeX, AlertTriangle } from 'lucide-react';
+import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Trash2, Check, Radio, Volume2, VolumeX, AlertTriangle, Puzzle } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
 import { usePresets } from '@/hooks/usePresets';
 import { useLiveProcessor } from '@/hooks/useLiveProcessor';
 import { drawWaveform } from '@/lib/audioUtils';
+import { downloadExtension } from '@/lib/downloadExtension';
 import { cn } from '@/lib/utils';
 
 function formatTime(seconds: number): string {
@@ -147,6 +148,7 @@ export default function Studio() {
   const [presetName, setPresetName] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
   const [loadedPresetId, setLoadedPresetId] = useState<string | null>(null);
+  const [extDownloading, setExtDownloading] = useState(false);
 
   const handleRecordStop = useCallback(async () => {
     recorder.stopRecording();
@@ -715,6 +717,43 @@ export default function Studio() {
         <p className="text-xs font-mono text-muted-foreground/50 mt-6 text-center">
           Click effect headers to expand controls · Toggle checkbox to enable
         </p>
+
+        {/* ── Chrome Extension ── */}
+        <div className="border-t border-border mt-8 pt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Puzzle className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest">Use in WhatsApp / Meet / Discord</h2>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3 text-xs font-mono text-muted-foreground leading-relaxed">
+            <p className="text-foreground font-semibold text-xs">Chrome Extension — injects your masked voice directly into any web call.</p>
+            <ol className="space-y-1.5 list-none">
+              <li><span className="text-primary font-bold">1.</span> Download and unzip the extension below.</li>
+              <li><span className="text-primary font-bold">2.</span> In Chrome, go to <span className="text-foreground">chrome://extensions</span></li>
+              <li><span className="text-primary font-bold">3.</span> Enable <span className="text-foreground">Developer mode</span> (top-right toggle).</li>
+              <li><span className="text-primary font-bold">4.</span> Click <span className="text-foreground">Load unpacked</span> → select the unzipped folder.</li>
+              <li><span className="text-primary font-bold">5.</span> Open WhatsApp Web, click the <span className="text-foreground">VoiceMask</span> extension icon, enable effects, then <span className="text-yellow-400">start a new call</span>.</li>
+            </ol>
+            <p className="text-muted-foreground/50">Works on: WhatsApp Web · Google Meet · Discord · Zoom</p>
+          </div>
+
+          <button
+            onClick={async () => {
+              setExtDownloading(true);
+              try { await downloadExtension(); } finally { setExtDownloading(false); }
+            }}
+            disabled={extDownloading}
+            className={cn(
+              'mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-lg font-mono text-sm font-bold transition-all border',
+              extDownloading
+                ? 'border-border text-muted-foreground cursor-not-allowed'
+                : 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 shadow-[0_0_16px_rgba(0,229,255,0.15)]'
+            )}
+          >
+            <Download className="w-4 h-4" />
+            {extDownloading ? 'PREPARING ZIP...' : 'DOWNLOAD CHROME EXTENSION'}
+          </button>
+        </div>
       </div>
     </div>
   );
