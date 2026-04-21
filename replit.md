@@ -4,6 +4,16 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
+## Artifacts
+
+### Voice Masker (`artifacts/voice-masker`)
+- Frontend-only React + Vite web app at `/`
+- Browser-based voice effects studio using Web Audio API + MediaRecorder
+- Features: microphone recording, audio file upload, 7 real audio effects, WAV download
+- Effects: pitch shift, robot voice, echo, reverb, low pass filter, high pass filter, distortion
+- All processing done client-side with OfflineAudioContext
+- Dark theme with cyan accent color
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
