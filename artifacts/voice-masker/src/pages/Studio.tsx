@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mic, Square, Upload, Play, Pause, Download, Zap, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Trash2, Check } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { useAudioProcessor } from '@/hooks/useAudioProcessor';
+import { usePresets } from '@/hooks/usePresets';
 import { drawWaveform } from '@/lib/audioUtils';
 import { cn } from '@/lib/utils';
 
@@ -137,9 +138,13 @@ function WaveformCanvas({ buffer, label, color = '#00e5ff' }: WaveformCanvasProp
 export default function Studio() {
   const recorder = useAudioRecorder();
   const processor = useAudioProcessor();
+  const { presets, savePreset, deletePreset } = usePresets();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [hasAudio, setHasAudio] = useState(false);
+  const [presetName, setPresetName] = useState('');
+  const [savedFlash, setSavedFlash] = useState(false);
+  const [loadedPresetId, setLoadedPresetId] = useState<string | null>(null);
 
   const handleRecordStop = useCallback(async () => {
     recorder.stopRecording();
@@ -173,6 +178,25 @@ export default function Studio() {
     recorder.clearRecording();
     setHasAudio(false);
   }, [recorder]);
+
+  const handleSavePreset = useCallback(() => {
+    if (!presetName.trim()) return;
+    savePreset(presetName, processor.effects);
+    setPresetName('');
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1500);
+    setLoadedPresetId(null);
+  }, [presetName, processor.effects, savePreset]);
+
+  const handleLoadPreset = useCallback((id: string) => {
+    const preset = presets.find(p => p.id === id);
+    if (!preset) return;
+    const { effects } = preset;
+    (Object.keys(effects) as Array<keyof typeof effects>).forEach(key => {
+      processor.updateEffect(key, effects[key] as never);
+    });
+    setLoadedPresetId(id);
+  }, [presets, processor]);
 
   const { effects, updateEffect } = processor;
 
@@ -335,6 +359,94 @@ export default function Studio() {
 
       {/* Right Panel — Effects */}
       <div className="flex-1 flex flex-col p-5 overflow-y-auto">
+        {/* Presets Section */}
+        <div className="mb-5">
+          <h2 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest mb-3">Presets</h2>
+
+          {/* Save Preset Row */}
+          <div className="flex gap-2 mb-3">
+            <input
+              data-testid="input-preset-name"
+              type="text"
+              placeholder="Name this preset..."
+              value={presetName}
+              onChange={e => setPresetName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSavePreset()}
+              className="flex-1 bg-card border border-border rounded-lg px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 transition-colors"
+            />
+            <button
+              data-testid="button-save-preset"
+              onClick={handleSavePreset}
+              disabled={!presetName.trim()}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-2 rounded-lg font-mono text-xs font-semibold transition-all shrink-0',
+                savedFlash
+                  ? 'bg-green-500/20 border border-green-500/50 text-green-400'
+                  : presetName.trim()
+                    ? 'bg-primary/10 border border-primary/40 text-primary hover:bg-primary/20'
+                    : 'bg-muted border border-border text-muted-foreground cursor-not-allowed'
+              )}
+            >
+              {savedFlash ? <Check className="w-3.5 h-3.5" /> : <BookmarkPlus className="w-3.5 h-3.5" />}
+              {savedFlash ? 'SAVED' : 'SAVE'}
+            </button>
+          </div>
+
+          {/* Preset List */}
+          {presets.length === 0 ? (
+            <p className="text-xs font-mono text-muted-foreground/40 italic text-center py-3 border border-dashed border-border/40 rounded-lg">
+              No presets yet — configure effects and save
+            </p>
+          ) : (
+            <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+              {presets.map(preset => (
+                <div
+                  key={preset.id}
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all group',
+                    loadedPresetId === preset.id
+                      ? 'border-primary/50 bg-primary/10'
+                      : 'border-border bg-card hover:border-border/80'
+                  )}
+                >
+                  <span className={cn(
+                    'flex-1 text-xs font-mono truncate',
+                    loadedPresetId === preset.id ? 'text-primary' : 'text-foreground'
+                  )}>
+                    {preset.name}
+                  </span>
+                  <span className="text-xs font-mono text-muted-foreground/40 shrink-0">
+                    {Object.values(preset.effects).filter(e => e.enabled).length} active
+                  </span>
+                  <button
+                    data-testid={`button-load-preset-${preset.id}`}
+                    onClick={() => handleLoadPreset(preset.id)}
+                    className={cn(
+                      'text-xs font-mono font-semibold px-2 py-0.5 rounded transition-all',
+                      loadedPresetId === preset.id
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-primary'
+                    )}
+                  >
+                    {loadedPresetId === preset.id ? 'LOADED' : 'LOAD'}
+                  </button>
+                  <button
+                    data-testid={`button-delete-preset-${preset.id}`}
+                    onClick={() => {
+                      deletePreset(preset.id);
+                      if (loadedPresetId === preset.id) setLoadedPresetId(null);
+                    }}
+                    className="text-muted-foreground/30 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                    aria-label="Delete preset"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <h2 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest mb-4">Effects Chain</h2>
 
         <div className="flex flex-col gap-3">
